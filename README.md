@@ -1,6 +1,6 @@
 # atelierTS
 
-Projet de prévision de consommation électrique (Brest Métropole) avec un modèle **LSTM multivarié**, un suivi d'expériences via **MLflow** et une base **TimescaleDB (PostgreSQL)**.
+Projet de prévision de consommation électrique (Brest Métropole) avec un modèle **LSTM multivarié** et un suivi d'expériences via **MLflow**.
 
 ---
 
@@ -9,123 +9,159 @@ Projet de prévision de consommation électrique (Brest Métropole) avec un mod�
 Le code de `ml/modele.py` a été factorisé en 3 modules pour séparer clairement les responsabilités.
 
 ### `ml/data_preparation.py`
-Préparation des données : récupération conso/météo, agrégation journalière, features temporelles/calendaires, split train/test.
+Responsable de **toute la préparation des données** :
+- récupération de la consommation électrique (API Opendatasoft),
+- récupération météo (Open-Meteo),
+- agrégation journalière,
+- fusion des sources,
+- création des features temporelles et calendaires,
+- split train/test.
+
+En sortie, ce module fournit :
+- `dataset_train`,
+- `dataset_test`,
+- la liste des `features`,
+- la `target`.
 
 ### `ml/model_preparation.py`
-Préparation ML : normalisation (`MinMaxScaler`), création des séquences (`window_size`), modèle LSTM, entraînement et métriques (MAE/RMSE/MAPE).
+Responsable de la **préparation ML et du modèle** :
+- normalisation des variables (`MinMaxScaler`),
+- création des séquences temporelles (`window_size`) pour le LSTM,
+- construction du modèle Keras (LSTM + Dropout + Dense),
+- entraînement,
+- calcul des métriques (MAE, RMSE, MAPE).
 
 ### `ml/modele.py`
-Orchestration : enchaîne data + modèle, configure MLflow et lance un run d'entraînement complet.
+Responsable de l'**orchestration globale** :
+- appelle la préparation des données,
+- appelle la préparation/entraînement du modèle,
+- configure et utilise MLflow,
+- lance un run complet reproductible.
+
+Cette séparation rend le projet plus lisible, testable et maintenable.
 
 ---
 
-## 2) Lignes MLflow ajoutées dans Python
+## 2) Lignes MLflow ajoutées dans Python (et à quoi elles servent)
 
-Dans `ml/modele.py` :
-- `mlflow.set_tracking_uri(...)` : définit où sont stockés les runs.
-- `mlflow.set_experiment("brest_consumption_forecast")` : regroupe les runs dans une expérience.
-- `with mlflow.start_run(...)` : crée un run d'entraînement.
-- `mlflow.log_params(...)` : journalise les hyperparamètres.
-- `mlflow.log_metric(...)` / `mlflow.log_metrics(...)` : journalise les performances.
-- `mlflow.keras.log_model(...)` : enregistre le modèle entraîné comme artefact.
+Dans `ml/modele.py`, les blocs MLflow ont un rôle précis :
 
----
+### `mlflow.set_tracking_uri(...)`
+Définit l'URL du serveur MLflow sur lequel écrire les runs.
+- Par défaut : `http://127.0.0.1:5000`
+- configurable via la variable d'environnement `MLFLOW_TRACKING_URI`
 
-## 3) Docker Compose (MLflow + TimescaleDB)
+### `mlflow.set_experiment("brest_consumption_forecast")`
+Crée/sélectionne l'expérience MLflow qui regroupe les runs de ce projet.
 
-Le `docker-compose.yml` lance 2 services :
+### `with mlflow.start_run(run_name="lstm_brest_consumption"):`
+Ouvre un run MLflow (un entraînement complet).
+Tout ce qui est loggé dans ce bloc est attaché à ce run.
 
-- **mlflow**
-  - UI sur `http://localhost:5000`
-  - backend SQLite dans `./mlflow`
+### `mlflow.log_params({...})`
+Enregistre les hyperparamètres utiles à la reproductibilité :
+- `window_size`,
+- `epochs`,
+- `batch_size`,
+- `n_features`.
 
-- **timescaledb**
-  - image `timescale/timescaledb:latest-pg17`
-  - PostgreSQL exposé sur `localhost:5432`
-  - variables lues depuis `.env`
-  - volumes :
-    - `./data/init.sql:/docker-entrypoint-initdb.d/init.sql` (initialisation des tables)
-    - `./data/postgresql:/var/lib/postgresql/data` (persistance locale)
+### `mlflow.log_metric("val_loss", ...)` et `mlflow.log_metrics(metrics)`
+Enregistre les performances du modèle :
+- `val_loss`,
+- `mae`,
+- `rmse`,
+- `mape`.
 
----
-
-## 4) Base TimescaleDB : schéma et ETL
-
-## Fichier d'initialisation SQL
-`data/init.sql` crée :
-- `consommation`
-- `meteo`
-- `prediction`
-
-et transforme ces tables en hypertables Timescale.
-
-## Scripts Python BDD
-- `bdd/connexion.py` : classe `ConnexionBDD`
-  - variables de classe `bdd` et `curseur`
-  - méthodes de classe `connexion()` et `deconnexion()`
-  - lit les variables PostgreSQL depuis `.env`
-- `bdd/etl.py` : charge les données utiles au modèle dans les 3 tables
-  - insertion/upsert de la consommation
-  - insertion/upsert de la météo
-  - alimentation de `prediction` avec un baseline `J-1`
+### `mlflow.keras.log_model(model, artifact_path="model")`
+Sauvegarde le modèle entraîné comme artefact MLflow (pour versionner/réutiliser).
 
 ---
 
-## 5) Lancer l'application web MLflow et ce qu'on doit y trouver
+## 3) Explication du `docker-compose.yml`
+
+Le `docker-compose.yml` fournit un service unique : `mlflow`.
+
+### Ce qu'il configure
+- **Image** : `ghcr.io/mlflow/mlflow:v2.22.0`
+- **Port** : `5000:5000` (UI accessible depuis l'hôte)
+- **Persistance** : volume `./mlflow:/mlflow`
+- **Backend store** : SQLite (`/mlflow/mlflow.db`)
+- **Artifact store** : `/mlflow/artifacts`
+
+### Pourquoi c'est utile
+- démarrage rapide d'un serveur MLflow local,
+- conservation des runs/modèles entre redémarrages,
+- même configuration pour toute l'équipe.
+
+---
+
+## 4) Lancer l'application web MLflow et ce qu'on doit y trouver
 
 ## Prérequis
-- Docker + Docker Compose
-- `uv`
+- Docker + Docker Compose installés
+- dépendances Python installées via `uv`
 
 ## Étapes
 
-### A. Préparer l'environnement Python
+### A. Installer les dépendances Python
 ```bash
 uv sync
 ```
 
-### B. Créer le fichier `.env`
-Exemple minimal (à adapter) :
-```env
-POSTGRES_HOST=timescaledb
-POSTGRES_PORT=5432
-POSTGRES_DB=atelierts
-POSTGRES_USER=atelierts
-POSTGRES_PASSWORD=atelierts
-```
-
-### C. Démarrer les services
+### B. Démarrer MLflow
 ```bash
 docker compose up -d
 ```
 
-### D. Charger les données dans la base
+### C. Vérifier que le service tourne
 ```bash
-uv run python bdd/etl.py
+docker compose ps
 ```
 
-### E. Lancer l'entraînement avec MLflow
+### D. Lancer l'entraînement Python
+```bash
+uv run python ml/modele.py
+```
+
+Si besoin, expliciter l'URL du tracking server :
 ```bash
 MLFLOW_TRACKING_URI=http://localhost:5000 uv run python ml/modele.py
 ```
 
-### F. Ouvrir l'UI
-- http://localhost:5000
+### E. Ouvrir l'UI MLflow
+- URL : http://localhost:5000
 
-## Ce que vous devriez voir dans MLflow
-- expérience **`brest_consumption_forecast`**
-- run **`lstm_brest_consumption`**
-- paramètres (`window_size`, `epochs`, `batch_size`, `n_features`)
-- métriques (`val_loss`, `mae`, `rmse`, `mape`)
-- artefact modèle (`model`)
+## Ce que vous devriez voir dans l'interface
+- une expérience nommée **`brest_consumption_forecast`**,
+- au moins un run **`lstm_brest_consumption`**,
+- les paramètres (`window_size`, `epochs`, `batch_size`, `n_features`),
+- les métriques (`val_loss`, `mae`, `rmse`, `mape`),
+- un artefact modèle (dossier `model`).
 
 ---
 
 ## Commandes utiles
 
+### Arrêter MLflow
 ```bash
-docker compose ps
-docker compose logs -f timescaledb
-docker compose logs -f mlflow
 docker compose down
 ```
+
+### Voir les logs MLflow
+```bash
+docker compose logs -f mlflow
+```
+
+### Redémarrer MLflow
+```bash
+docker compose restart mlflow
+```
+
+---
+
+## Structure des fichiers (résumé)
+
+- `ml/data_preparation.py` : ingestion + features + split
+- `ml/model_preparation.py` : scalers + séquences + LSTM + évaluation
+- `ml/modele.py` : orchestration run + tracking MLflow
+- `docker-compose.yml` : serveur MLflow local
