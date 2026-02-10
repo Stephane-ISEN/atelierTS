@@ -1,4 +1,4 @@
-# Energy Time Series
+# Série temporelle consommation d'énergie
 
 Projet complet pour prédire la consommation électrique horaire de Brest à partir des données météo, entraîner un modèle LSTM, stocker mesures/prédictions en MySQL et exposer les données via FastAPI et Streamlit.
 
