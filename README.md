@@ -1,4 +1,4 @@
-# atelierTS
+# Série temporelle consommation d'énergie
 
 Projet de prévision de consommation électrique (Brest Métropole) avec un modèle **LSTM multivarié** et un suivi d'expériences via **MLflow**.
 
