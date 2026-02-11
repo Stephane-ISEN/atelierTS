@@ -120,7 +120,7 @@ docker compose ps
 
 ### D. Lancer l'entraînement Python
 ```bash
-uv run python ml/modele.py
+uv run ml/modele.py
 ```
 
 Si besoin, expliciter l'URL du tracking server :
