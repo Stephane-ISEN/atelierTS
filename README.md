@@ -1,167 +1,317 @@
-# Série temporelle consommation d'énergie
+# Série temporelle – Prévision de consommation d'énergie (Brest Métropole)
 
-Projet de prévision de consommation électrique (Brest Métropole) avec un modèle **LSTM multivarié** et un suivi d'expériences via **MLflow**.
+Projet complet de **prévision de consommation électrique** à l’aide d’un modèle **LSTM multivarié** avec suivi des expériences via **MLflow**.
 
----
+Objectifs :
 
-## 1) Organisation du code Python (3 fichiers)
-
-Le code de `ml/modele.py` a été factorisé en 3 modules pour séparer clairement les responsabilités.
-
-### `ml/data_preparation.py`
-Responsable de **toute la préparation des données** :
-- récupération de la consommation électrique (API Opendatasoft),
-- récupération météo (Open-Meteo),
-- agrégation journalière,
-- fusion des sources,
-- création des features temporelles et calendaires,
-- split train/test.
-
-En sortie, ce module fournit :
-- `dataset_train`,
-- `dataset_test`,
-- la liste des `features`,
-- la `target`.
-
-### `ml/model_preparation.py`
-Responsable de la **préparation ML et du modèle** :
-- normalisation des variables (`MinMaxScaler`),
-- création des séquences temporelles (`window_size`) pour le LSTM,
-- construction du modèle Keras (LSTM + Dropout + Dense),
-- entraînement,
-- calcul des métriques (MAE, RMSE, MAPE).
-
-### `ml/modele.py`
-Responsable de l'**orchestration globale** :
-- appelle la préparation des données,
-- appelle la préparation/entraînement du modèle,
-- configure et utilise MLflow,
-- lance un run complet reproductible.
-
-Cette séparation rend le projet plus lisible, testable et maintenable.
+* Structurer un modèle prêt pour la production
+* Versionner les entraînements
+* Suivre les métriques
+* Sauvegarder les modèles entraînés
 
 ---
 
-## 2) Lignes MLflow ajoutées dans Python (et à quoi elles servent)
+# 1) Préparer le modèle pour la production
 
-Dans `ml/modele.py`, les blocs MLflow ont un rôle précis :
+## 🎯 Objectif
 
-### `mlflow.set_tracking_uri(...)`
-Définit l'URL du serveur MLflow sur lequel écrire les runs.
-- Par défaut : `http://127.0.0.1:5000`
-- configurable via la variable d'environnement `MLFLOW_TRACKING_URI`
+Passer d’un notebook expérimental à un script structuré, réutilisable et exécutable en ligne de commande.
 
-### `mlflow.set_experiment("brest_consumption_forecast")`
-Crée/sélectionne l'expérience MLflow qui regroupe les runs de ce projet.
+Un notebook est utile pour explorer.
+Un script Python est indispensable pour :
 
-### `with mlflow.start_run(run_name="lstm_brest_consumption"):`
-Ouvre un run MLflow (un entraînement complet).
-Tout ce qui est loggé dans ce bloc est attaché à ce run.
-
-### `mlflow.log_params({...})`
-Enregistre les hyperparamètres utiles à la reproductibilité :
-- `window_size`,
-- `epochs`,
-- `batch_size`,
-- `n_features`.
-
-### `mlflow.log_metric("val_loss", ...)` et `mlflow.log_metrics(metrics)`
-Enregistre les performances du modèle :
-- `val_loss`,
-- `mae`,
-- `rmse`,
-- `mape`.
-
-### `mlflow.keras.log_model(model, artifact_path="model")`
-Sauvegarde le modèle entraîné comme artefact MLflow (pour versionner/réutiliser).
+* automatiser l'entraînement
+* intégrer MLflow
+* dockeriser plus tard
+* industrialiser le pipeline
 
 ---
 
-## 3) Explication du `docker-compose.yml`
+## 📁 Étape
 
-Le `docker-compose.yml` fournit un service unique : `mlflow`.
+Dans le répertoire `./ml`, créer un fichier :
 
-### Ce qu'il configure
-- **Image** : `ghcr.io/mlflow/mlflow:v2.22.0`
-- **Port** : `5000:5000` (UI accessible depuis l'hôte)
-- **Persistance** : volume `./mlflow:/mlflow`
-- **Backend store** : SQLite (`/mlflow/mlflow.db`)
-- **Artifact store** : `/mlflow/artifacts`
-
-### Pourquoi c'est utile
-- démarrage rapide d'un serveur MLflow local,
-- conservation des runs/modèles entre redémarrages,
-- même configuration pour toute l'équipe.
-
----
-
-## 4) Lancer l'application web MLflow et ce qu'on doit y trouver
-
-## Prérequis
-- Docker + Docker Compose installés
-- dépendances Python installées via `uv`
-
-## Étapes
-
-### A. Installer les dépendances Python
-```bash
-uv sync
+```
+ml/modele.py
 ```
 
-### B. Démarrer MLflow
-```bash
-docker compose up -d
+Y déplacer le code du notebook `notebook_2_TS_multivarie` :
+
+* préparation des données
+* création des séquences temporelles
+* définition du modèle LSTM
+* entraînement
+* évaluation
+
+---
+
+## 🧠 Bonne pratique
+
+Séparer le code en fonctions :
+
+```python
+prepare_datasets()
+prepare_training_tensors()
+build_lstm_model()
+train_and_evaluate()
+run_training()
 ```
 
-### C. Vérifier que le service tourne
+Cela permet :
+
+* une meilleure lisibilité
+* des tests unitaires
+* une réutilisation future (API, batch, etc.)
+
+---
+
+# 2) Lancer MLflow
+
+## 🎯 Objectif
+
+Mettre en place un serveur de suivi des expériences.
+
+MLflow permet de :
+
+* enregistrer les hyperparamètres
+* stocker les métriques
+* sauvegarder les modèles
+* comparer les runs
+
+---
+
+## 📁 Créer la structure locale
+
+À la racine du projet :
+
 ```bash
-docker compose ps
+mkdir -p mlruns/artifacts
 ```
 
-### D. Lancer l'entraînement Python
+Cette structure contiendra :
+
+```
+mlruns/
+├── mlflow.db         ← base SQLite (tracking)
+└── artifacts/        ← modèles sauvegardés
+```
+
+---
+
+## 🚀 Lancer le serveur MLflow
+
+```bash
+uv run mlflow server \
+  --host 0.0.0.0 \
+  --port 5000 \
+  --backend-store-uri sqlite:///mlruns/mlflow.db \
+  --default-artifact-root ./mlruns/artifacts
+```
+
+### 🔎 Explication des options
+
+| Option                    | Rôle                                         |
+| ------------------------- | -------------------------------------------- |
+| `--backend-store-uri`     | Base SQLite qui stocke les runs et métriques |
+| `--default-artifact-root` | Dossier où seront stockés les modèles        |
+| `--host`                  | Permet d'accéder depuis navigateur           |
+| `--port`                  | Port d’accès au serveur                      |
+
+---
+
+## 🌐 Accéder à l’interface
+
+Ouvrir :
+
+```
+http://127.0.0.1:5000
+```
+
+Interface vide au départ — c’est normal.
+
+---
+
+# 3) Intégrer MLflow dans le script Python
+
+Dans `ml/modele.py`, ajouter les éléments suivants.
+
+---
+
+## 🔗 Définir le serveur MLflow
+
+```python
+mlflow.set_tracking_uri("http://127.0.0.1:5000")
+```
+
+### 🎯 Rôle
+
+Indique à MLflow :
+
+> Où envoyer les runs.
+
+Sans cette ligne, MLflow fonctionnerait en mode local.
+
+---
+
+## 🗂 Définir l’expérience
+
+```python
+mlflow.set_experiment("brest_consumption_forecast")
+```
+
+### 🎯 Rôle
+
+* Crée l’expérience si elle n’existe pas
+* Regroupe tous les entraînements sous un même projet
+
+---
+
+## ▶️ Démarrer un run
+
+```python
+with mlflow.start_run(run_name="lstm_brest_consumption"):
+```
+
+### 🎯 Rôle
+
+Un run correspond à **un entraînement complet**.
+
+Tout ce qui est loggé dans ce bloc :
+
+* paramètres
+* métriques
+* artefacts
+
+sera attaché à ce run.
+
+---
+
+## ⚙️ Logger les hyperparamètres
+
+```python
+mlflow.log_params({
+    "window_size": window_size,
+    "epochs": epochs,
+    "batch_size": batch_size,
+    "n_features": len(features),
+})
+```
+
+### 🎯 Rôle
+
+Permet de :
+
+* comprendre comment le modèle a été entraîné
+* reproduire les résultats
+* comparer plusieurs configurations
+
+---
+
+## 📊 Logger les métriques
+
+```python
+mlflow.log_metric("val_loss", final_val_loss)
+mlflow.log_metrics(metrics)
+```
+
+### 🎯 Rôle
+
+Enregistrer les performances :
+
+* `val_loss`
+* `mae`
+* `rmse`
+* `mape`
+
+Permet :
+
+* comparaison visuelle entre runs
+* sélection du meilleur modèle
+
+---
+
+## 💾 Sauvegarder le modèle
+
+```python
+mlflow.keras.log_model(model, artifact_path="model")
+```
+
+### 🎯 Rôle
+
+Enregistre :
+
+* architecture du modèle
+* poids entraînés
+* configuration
+
+Le modèle est stocké dans :
+
+```
+mlruns/artifacts/...
+```
+
+Il pourra être :
+
+* rechargé plus tard
+* servi via API
+* versionné
+
+---
+
+# 4) Lancer l'entraînement
+
 ```bash
 uv run ml/modele.py
 ```
 
-Si besoin, expliciter l'URL du tracking server :
-```bash
-MLFLOW_TRACKING_URI=http://localhost:5000 uv run python ml/modele.py
-```
+### 🎯 Ce qu’il se passe
 
-### E. Ouvrir l'UI MLflow
-- URL : http://localhost:5000
-
-## Ce que vous devriez voir dans l'interface
-- une expérience nommée **`brest_consumption_forecast`**,
-- au moins un run **`lstm_brest_consumption`**,
-- les paramètres (`window_size`, `epochs`, `batch_size`, `n_features`),
-- les métriques (`val_loss`, `mae`, `rmse`, `mape`),
-- un artefact modèle (dossier `model`).
+1. Chargement des données
+2. Création des séquences LSTM
+3. Entraînement du modèle
+4. Enregistrement dans MLflow
+5. Sauvegarde du modèle
 
 ---
 
-## Commandes utiles
+# 5) Ce que vous devriez voir dans l'interface
 
-### Arrêter MLflow
-```bash
-docker compose down
+Dans MLflow UI :
+
+## 📁 Une expérience
+
+```
+brest_consumption_forecast
 ```
 
-### Voir les logs MLflow
-```bash
-docker compose logs -f mlflow
+## ▶️ Un run
+
+```
+lstm_brest_consumption
 ```
 
-### Redémarrer MLflow
-```bash
-docker compose restart mlflow
+## 📌 Paramètres
+
+* `window_size`
+* `epochs`
+* `batch_size`
+* `n_features`
+
+## 📈 Métriques
+
+* `val_loss`
+* `mae`
+* `rmse`
+* `mape`
+
+## 📦 Artefact
+
+Un dossier :
+
 ```
+model/
+```
+
+Contenant le modèle LSTM sauvegardé.
 
 ---
-
-## Structure des fichiers (résumé)
-
-- `ml/data_preparation.py` : ingestion + features + split
-- `ml/model_preparation.py` : scalers + séquences + LSTM + évaluation
-- `ml/modele.py` : orchestration run + tracking MLflow
-- `docker-compose.yml` : serveur MLflow local
