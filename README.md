@@ -85,7 +85,7 @@ MLflow permet de :
 À la racine du projet :
 
 ```bash
-mkdir -p mlruns/artifacts
+mkdir -p mlruns
 ```
 
 Cette structure contiendra :
@@ -93,7 +93,7 @@ Cette structure contiendra :
 ```
 mlruns/
 ├── mlflow.db         ← base SQLite (tracking)
-└── artifacts/        ← modèles sauvegardés
+└── 1/                ← numéro de run
 ```
 
 ---
@@ -105,7 +105,7 @@ uv run mlflow server \
   --host 0.0.0.0 \
   --port 5000 \
   --backend-store-uri sqlite:///mlruns/mlflow.db \
-  --default-artifact-root ./mlruns/artifacts
+  --default-artifact-root ./mlruns
 ```
 
 ### 🔎 Explication des options
