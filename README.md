@@ -93,7 +93,7 @@ Cette structure contiendra :
 ```
 mlruns/
 ├── mlflow.db         ← base SQLite (tracking)
-└── 1/                ← numéro de run
+└── 1/                ← numéro d'expérimentation
 ```
 
 ---
