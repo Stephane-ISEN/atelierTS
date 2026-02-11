@@ -9,5 +9,4 @@ Remplir le notebook 3 : détection anomalies à trou
 ---
 
 ### Navigation
-- [Chapitre 1 : installation](https://github.com/Stephane-ISEN/atelierTS/ch1-installation)
-- [Chapitre 3 : explicabilité et anomalies ](https://github.com/Stephane-ISEN/atelierLSTM/ch3-explicabilite)
+- [Chapitre 2 : modèle pour les séries temproelles ](https://github.com/Stephane-ISEN/atelierLSTM/ch2-ml)
