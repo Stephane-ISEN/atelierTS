@@ -94,7 +94,7 @@ Le code source du projet est hébergé sur un dépôt public GitHub.
 
 ```bash
 git clone https://github.com/Stephane-ISEN/atelierTS.git
-cd atelierLSTM
+cd atelierTS
 uv sync
 ```
 ---
