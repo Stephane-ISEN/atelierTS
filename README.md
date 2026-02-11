@@ -226,6 +226,23 @@ uv add --dev ipykernel
 
 Lorsque vous êtes invité à sélectionner un noyau, choisissez « Environnements Python » et sélectionnez l’environnement virtuel que vous avez créé précédemment (par exemple, .venv/bin/pythonsous macOS et Linux, 
 
+---
+
+**Lancer une application FastAPI**
+
+```bash
+uv run uvicorn api.main:app --reload
+```
+
+---
+
+**Lancer Streamlit**
+
+```bash
+uv run streamlit run dashboard/app.py
+```
+
+---
 ### Navigation
 - [Introduction](https://github.com/Stephane-ISEN/atelierTS/main)
 - [Chapitre 2 : modèle pour les séries temproelles ](https://github.com/Stephane-ISEN/atelierLSTM/ch2-ml)
