@@ -5,6 +5,9 @@ build/
 dist/
 wheels/
 *.egg-info
+mlruns/
+.cache.sqlite
+conso_brest_2020_2025.csv
 
 # Virtual environments
 .venv

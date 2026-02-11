@@ -1,13 +1,10 @@
 from __future__ import annotations
 
 import os
-
 import mlflow
+from data_preparation import prepare_datasets
+from model_preparation import build_lstm_model, prepare_training_tensors, train_and_evaluate
 import mlflow.keras
-
-from ml.data_preparation import prepare_datasets
-from ml.model_preparation import build_lstm_model, prepare_training_tensors, train_and_evaluate
-
 
 def run_training(window_size: int = 30, epochs: int = 200, batch_size: int = 32) -> dict[str, float]:
     dataset_train, dataset_test, features, target = prepare_datasets()
@@ -51,11 +48,14 @@ def run_training(window_size: int = 30, epochs: int = 200, batch_size: int = 32)
 
     return metrics
 
-
 if __name__ == "__main__":
+
     tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
-    mlflow.set_tracking_uri(tracking_uri)
+    mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("brest_consumption_forecast")
+
+    experiment = mlflow.get_experiment_by_name("brest_consumption_forecast")
+    print(f"////////////////////////////////{experiment.artifact_location}")
 
     scores = run_training()
     print("Training terminé. Metrics:", scores)

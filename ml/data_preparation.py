@@ -40,6 +40,7 @@ def fetch_brest_electricity_data() -> pd.DataFrame:
         "order_by": "date_heure ASC",
         "timezone": "UTC",
     }
+    
     response = requests.get(ELECTRICITY_API_URL, params=params, timeout=30)
     response.raise_for_status()
     df = pd.DataFrame(response.json())
