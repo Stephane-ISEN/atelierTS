@@ -1,6 +1,7 @@
-# atelierTS
+# Série temporelle consommation d'énergie
 
-Projet de prévision de consommation électrique (Brest Métropole) avec un modèle LSTM multivarié.
+Projet de prévision de consommation électrique (Brest Métropole).
+Intégration  de la base **PostegreSQL** à **FastAPI**.
 
 ## Lancer le projet Python (uv)
 
