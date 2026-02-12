@@ -74,10 +74,6 @@ Une fois la table créée de manière classique, elle doit être convertie en hy
 
 ---
 
-Voici une explication claire et rédigée pour ton tutoriel, suivie du code et d’une méthode simple de vérification.
-
----
-
 ## docker-compose
 
 Ajoute les lignes suivantes dans le docker-compose, afin de créer la base PostegreSQL.
