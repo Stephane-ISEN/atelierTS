@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS prediction (
     id BIGSERIAL PRIMARY KEY,
     date_prediction TIMESTAMPTZ NOT NULL,
     valeur_predite DOUBLE PRECISION,
-    UNIQUE (date_prediction, modele)
+    UNIQUE (date_prediction)
 );
 
 SELECT create_hypertable('consommation', 'date_mesure', if_not_exists => TRUE);
