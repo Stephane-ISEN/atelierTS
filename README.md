@@ -3,27 +3,21 @@
 Projet de prévision de consommation électrique (Brest Métropole).
 Intégration  de la base **PostegreSQL** à **FastAPI**.
 
-## Lancer le projet Python (uv)
+---
 
-```bash
-uv sync
-uv run python ml/modele.py
-```
+## Ajout d'un service de lecture de bdd
 
-## Lancer MLflow via Docker Compose
+Dans le répertoire `./api`, il faut compléter la fonction `get_features_for_day()` du script `services.py`.
 
-```bash
-docker compose up -d
-```
+Ce code doit : 
+* Interroge PostgreSQL pour récupérer les 30 jours précédents
+* Reconstruit dynamiquement les features nécessaires
+* Génère les décalages temporels en mémoire
+* Construit la séquence LSTM
+* Retourne un tenseur prêt pour `model.predict()`
 
-UI MLflow disponible sur: http://localhost:5000
 
-## Configuration MLflow côté script
 
-Par défaut le script utilise `MLFLOW_TRACKING_URI=http://127.0.0.1:5000`.
+---
 
-Vous pouvez le surcharger:
-
-```bash
-MLFLOW_TRACKING_URI=http://localhost:5000 uv run python ml/modele.py
-```
+## Ajout d'un service d'écriture en bdd
