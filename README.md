@@ -119,6 +119,35 @@ def get_features_for_day(target_date: date):
     return X
 ```
 
+Le service en place, il faut mettre à jour le endpoint dans `main.py`.
+
+Relancer l'API si elle est arrêtée :
+```
+Uvicorn running on http://127.0.0.1:8000
+```
+
+Puis tester les prédictions sur :
+```
+http://127.0.0.1:8000/docs
+```
+
 ---
 
 ## Ajout d'un service d'écriture en bdd
+
+Maintenant, il faut stocker les prévisions en base. Pour ça, il faut ajouter la méthode `save_prediction()` au script `services.py` et mettre à jour le endpoint.
+
+Pour la vérification, il faut se connecter au PostegreSQL et faire une requête sur la table `prediction` : 
+
+```
+docker exec -it atelierts-timescaledb psql -U atelierts
+SELECT * FROM prediction ORDER BY date_prediction DESC;
+```
+
+---
+
+## conteneriser l'appli
+
+
+
+
