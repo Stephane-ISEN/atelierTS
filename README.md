@@ -148,6 +148,60 @@ SELECT * FROM prediction;
 
 ## conteneriser l'appli
 
+Il nous faut créer un conteneur pour l'appli. Pour ça, il faut une image qui contient tout le code de l'appli puis mettre à jour le `docker-compose`.
 
+Ajoute le fichier `Dockerfile` à la racine.
+```
+# =========================
+# Base image
+# =========================
+FROM python:3.12-slim
 
+# =========================
+# Installation uv
+# =========================
+RUN pip install --no-cache-dir uv
+
+# =========================
+# Dossier de travail
+# =========================
+WORKDIR /app
+
+# =========================
+# Copier fichiers dépendances
+# =========================
+COPY pyproject.toml uv.lock ./
+
+# Installer dépendances
+RUN uv sync --frozen
+
+# =========================
+# Copier le code
+# =========================
+COPY bdd ./bdd
+COPY api ./api
+
+RUN mkdir -p /app/mlruns
+
+# =========================
+# Exposer le port
+# =========================
+EXPOSE 8000
+
+# =========================
+# Lancer l'API
+# =========================
+CMD ["uv", "run", "uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+```
+Il faut mettre à jour le `docker-compose` en faisant attention à ce point : le répertoire `/app/mlruns` est destiné à faire le lien avec celui du MLFlow. 
+
+Puis relancer les conteneurs : 
+```
+docker compose up -d
+```
+
+Et tester l'API :
+```
+http://127.0.0.1:8000/docs
+```
 
