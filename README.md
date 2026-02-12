@@ -129,7 +129,7 @@ Interface Swagger automatique.
 
 ---
 
-# 📥 Format attendu de la donnée
+# Format attendu de la donnée
 
 Le endpoint attend :
 
