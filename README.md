@@ -224,3 +224,24 @@ class ConnexionBDD:
 Maintenant que la base est en place, il faut insérer les données dans les tables.
 Ajoute un script `etl.py` dans le répertoire `bdd`.
 Adapte les méthodes de `data_preparation.py` pour l'ingestion des données par PostegreSQL.
+
+---
+
+### Vérifier que des lignes existent
+
+Se connecter :
+
+```bash
+docker exec -it atelierts-timescaledb psql -U atelierts -d atelierts
+```
+
+Puis :
+
+```sql
+SELECT COUNT(*) FROM consommation;
+SELECT COUNT(*) FROM mesures;
+```
+
+Si tu obtiens un nombre > 0 → ingestion OK.
+
+---
