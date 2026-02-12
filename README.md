@@ -4,15 +4,21 @@ Projet de prévision de consommation électrique (Brest Métropole) avec une bas
 
 ---
 
-## Introduction à PostgreSQL
+## Ajout d'un service de lecture de bdd
 
-PostgreSQL est un système de gestion de base de données relationnelle open-source reconnu pour sa robustesse, sa conformité aux standards SQL et sa capacité à gérer des volumes de données importants. Contrairement à des bases plus légères ou orientées documents, PostgreSQL repose sur un modèle relationnel strict : les données sont organisées en tables, composées de colonnes typées et de lignes représentant des enregistrements. Chaque table peut être contrainte par des règles d’intégrité comme des clés primaires, des contraintes d’unicité ou des relations entre tables.
+Dans le répertoire `./api`, il faut compléter la fonction `get_features_for_day()` du script `services.py`.
 
-Dans un projet de prévision énergétique comme le tien, PostgreSQL permet de structurer clairement les différentes natures de données : les consommations observées, les prédictions générées par le modèle, et les variables explicatives utilisées pour entraîner ce modèle. Cette séparation logique favorise la lisibilité, la maintenance et l’évolutivité du système.
+Ce code doit : 
+* Interroge PostgreSQL pour récupérer les 30 jours précédents
+* Reconstruit dynamiquement les features nécessaires
+* Génère les décalages temporels en mémoire
+* Construit la séquence LSTM
+* Retourne un tenseur prêt pour `model.predict()`
+
 
 ---
 
-## Pourquoi ajouter TimescaleDB ?
+## Ajout d'un service d'écriture en bdd
 
 Lorsque les données sont organisées autour du temps — comme des consommations journalières ou des mesures météorologiques — on parle de séries temporelles. Les bases relationnelles classiques peuvent les stocker, mais elles ne sont pas optimisées pour des requêtes massives par plage de dates ou pour des insertions continues à haute fréquence.
 
