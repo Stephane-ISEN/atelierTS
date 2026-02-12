@@ -53,7 +53,7 @@ Ce dossier contient :
 On utilise :
 
 ```python
-mlflow.keras.load_model(path)
+modele = mlflow.keras.load_model(path)
 ```
 
 `path` doit pointer vers le dossier `model`.
@@ -62,6 +62,11 @@ Exemple :
 
 ```python
 ../mlruns/1/<RUN_ID>/artifacts/model
+```
+
+Le modèle chargé, les données préparées, il possible de lancer une prédiction : 
+```python
+modele.predict(X)
 ```
 
 ---
