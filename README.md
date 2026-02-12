@@ -78,7 +78,9 @@ Voici une explication claire et rédigée pour ton tutoriel, suivie du code et d
 
 ---
 
-## Code du docker-compose
+## docker-compose
+
+Ajoute les lignes suivantes dans le docker-compose, afin de créer la base PostegreSQL.
 
 ```yaml
 version: "3.9"
@@ -98,8 +100,6 @@ services:
 ```
 
 ---
-
-## Comment tester que la base est bien créée
 
 ### Vérifier que le conteneur fonctionne
 
