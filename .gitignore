@@ -8,6 +8,7 @@ wheels/
 mlruns/
 .cache.sqlite
 conso_brest_2020_2025.csv
+data/postgresql/
 
 # Virtual environments
 .venv

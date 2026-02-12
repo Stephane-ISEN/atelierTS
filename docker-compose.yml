@@ -19,3 +19,15 @@ services:
       --backend-store-uri sqlite:///mlflow/mlflow.db
       --default-artifact-root file:///home/isen/atelierTS/mlflow/artifacts
 
+  timescaledb:
+    image: timescale/timescaledb:latest-pg17
+    container_name: atelierts-timescaledb
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./data/postgresql:/var/lib/postgresql/data
+      
