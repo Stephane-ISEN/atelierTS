@@ -3,15 +3,13 @@ CREATE EXTENSION IF NOT EXISTS timescaledb;
 CREATE TABLE IF NOT EXISTS consommation (
     id BIGSERIAL PRIMARY KEY,
     date_mesure TIMESTAMPTZ NOT NULL,
-    consommation_mw DOUBLE PRECISION NOT NULL,
-    UNIQUE (date_mesure)
+    consommation_mw DOUBLE PRECISION NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS prediction (
     id BIGSERIAL PRIMARY KEY,
     date_prediction TIMESTAMPTZ NOT NULL,
-    valeur_predite DOUBLE PRECISION,
-    UNIQUE (date_prediction)
+    valeur_predite DOUBLE PRECISION
 );
 
 SELECT create_hypertable('consommation', 'date_mesure', if_not_exists => TRUE);
