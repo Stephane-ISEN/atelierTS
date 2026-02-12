@@ -161,3 +161,66 @@ Les trois tables doivent apparaître.
 
 ---
 
+Voici une version courte sous forme de points clés à placer sous le code :
+
+---
+
+## Connexion à partir de Python
+
+Script `connexion.py` dans le répertoire `bdd`
+
+``` python
+import os
+
+import psycopg2
+from dotenv import load_dotenv
+
+
+class ConnexionBDD:
+    bdd = None
+    curseur = None
+
+    @classmethod
+    def connexion(cls):
+        load_dotenv()
+        if cls.bdd is not None and cls.curseur is not None:
+            return cls.bdd, cls.curseur
+
+        cls.bdd = psycopg2.connect(
+            host=os.getenv("POSTGRES_HOST", "localhost"),
+            port=os.getenv("POSTGRES_PORT", "5432"),
+            dbname=os.getenv("POSTGRES_DB", "atelierts"),
+            user=os.getenv("POSTGRES_USER", "atelierts"),
+            password=os.getenv("POSTGRES_PASSWORD", "atelierts"),
+        )
+        cls.curseur = cls.bdd.cursor()
+        return cls.bdd, cls.curseur
+
+    @classmethod
+    def deconnexion(cls):
+        if cls.curseur is not None:
+            cls.curseur.close()
+            cls.curseur = None
+
+        if cls.bdd is not None:
+            cls.bdd.close()
+            cls.bdd = None
+```
+
+### Utilisation de `ConnexionBDD`
+
+* Centralise la connexion à PostgreSQL via `psycopg2`.
+* Lit automatiquement les paramètres de connexion depuis le fichier `.env`.
+* Réutilise la même connexion tant qu’elle est ouverte (évite les connexions multiples).
+* Retourne un objet `bdd` (connexion) et un `curseur` pour exécuter les requêtes SQL.
+* Nécessite un `commit()` après toute opération d’écriture (INSERT, UPDATE, DELETE).
+* La méthode `deconnexion()` ferme proprement le curseur et la connexion.
+* Permet d’utiliser la base aussi bien dans l’ETL que dans l’API.
+
+---
+
+### Ajout d'un ETL
+
+Maintenant que la base est en place, il faut insérer les données dans les tables.
+Ajoute un script `etl.py` dans le répertoire `bdd`.
+Adapte les méthodes de `data_preparation.py` pour l'ingestion des données par PostegreSQL.
