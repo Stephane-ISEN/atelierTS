@@ -28,25 +28,34 @@ Le fichier `init.sql` est exécuté automatiquement lors de l’initialisation d
 
 Ce fichier joue un rôle central dans la reproductibilité de ton environnement. Il garantit que toute nouvelle instance de la base possède la même structure, sans intervention manuelle. Ajouter une nouvelle table comme `mesures` dans ce fichier revient donc à intégrer définitivement cette structure dans l’architecture de la base.
 
-```bash
+```bash-- init.sql
+-- TimescaleDB extension
 CREATE EXTENSION IF NOT EXISTS timescaledb;
 
+-- =========================
+-- Table: consommation
+-- =========================
 CREATE TABLE IF NOT EXISTS consommation (
-    id BIGSERIAL PRIMARY KEY,
     date_mesure TIMESTAMPTZ NOT NULL,
     consommation_mw DOUBLE PRECISION NOT NULL,
-    UNIQUE (date_mesure)
+    PRIMARY KEY (date_mesure)
 );
 
+-- =========================
+-- Table: prediction
+-- =========================
 CREATE TABLE IF NOT EXISTS prediction (
-    id BIGSERIAL PRIMARY KEY,
     date_prediction TIMESTAMPTZ NOT NULL,
     valeur_predite DOUBLE PRECISION,
-    UNIQUE (date_prediction)
+    PRIMARY KEY (date_prediction)
 );
 
+-- =========================
+-- Hypertables (TimescaleDB)
+-- =========================
 SELECT create_hypertable('consommation', 'date_mesure', if_not_exists => TRUE);
 SELECT create_hypertable('prediction', 'date_prediction', if_not_exists => TRUE);
+
 ```
 
 ---
@@ -56,7 +65,6 @@ SELECT create_hypertable('prediction', 'date_prediction', if_not_exists => TRUE)
 La table `mesures` doit représenter les variables utilisées pour les prédictions du modèle LSTM multivarié. Elle regroupe les observations météorologiques, certaines valeurs prévisionnelles ainsi que des variables calendaires.
 
 dans le init.sql ajouter une nouvelle table qui contient : 
-- un id,
 - un timestamp,
 - temperature,
 - humidite,
@@ -67,8 +75,6 @@ dans le init.sql ajouter une nouvelle table qui contient :
 - mois,
 - weekend,
 - vacances.
-
-C'est aussi une hypertable.
 
 Une fois la table créée de manière classique, elle doit être convertie en hypertable en indiquant que la colonne temporelle constitue l’axe de partition. Cette transformation permet à TimescaleDB de gérer automatiquement la segmentation interne des données.
 
@@ -126,7 +132,7 @@ Lors du premier lancement, tu dois voir :
 Depuis le terminal :
 
 ```bash
-docker exec -it atelierts-timescaledb psql -U postgres
+docker exec -it atelierts-timescaledb psql -U atelierts
 ```
 
 Puis vérifier les tables :
