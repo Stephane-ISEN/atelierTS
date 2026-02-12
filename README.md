@@ -141,7 +141,7 @@ Pour la vérification, il faut se connecter au PostegreSQL et faire une requête
 
 ```
 docker exec -it atelierts-timescaledb psql -U atelierts
-SELECT * FROM prediction ORDER BY date_prediction DESC;
+SELECT * FROM prediction;
 ```
 
 ---
