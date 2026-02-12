@@ -30,4 +30,16 @@ services:
     volumes:
       - ./data/init.sql:/docker-entrypoint-initdb.d/init.sql
       - ./data/postgresql:/var/lib/postgresql/data
-      
+
+  api:
+    build: .
+    container_name: atelierts-api
+    restart: unless-stopped
+    depends_on:
+      - timescaledb
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./mlruns:/app/mlruns

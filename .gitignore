@@ -5,6 +5,7 @@ build/
 dist/
 wheels/
 *.egg-info
+mlflow/
 mlruns/
 .cache.sqlite
 conso_brest_2020_2025.csv
