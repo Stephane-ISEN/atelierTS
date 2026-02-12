@@ -50,12 +50,8 @@ def run_training(window_size: int = 30, epochs: int = 200, batch_size: int = 32)
 
 if __name__ == "__main__":
 
-    tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     mlflow.set_tracking_uri("http://127.0.0.1:5000")
     mlflow.set_experiment("brest_consumption_forecast")
-
-    experiment = mlflow.get_experiment_by_name("brest_consumption_forecast")
-    print(f"////////////////////////////////{experiment.artifact_location}")
 
     scores = run_training()
     print("Training terminé. Metrics:", scores)
